@@ -239,40 +239,62 @@ class PortfolioAnalyzer:
         self.portfolio_size = len(self.portfolio)
 
     def value(self, sigma_list: list) -> float:
-        val = 0
-        for i in range(self.portfolio_size):
-            if isinstance(self.portfolio[i], underlying):
-                val += self.portfolio[i].sign * self.portfolio[i].unit * self.portfolio[i].price
-            elif isinstance(self.portfolio[i], option):
-                val += self.portfolio[i].sign * self.portfolio[i].unit * OptionAnalyzer(self.portfolio[i]).bs_premium(sigma_list[i])
-        return val
+        return sum((ins.sign * ins.unit * ins.price if isinstance(ins, underlying) else \
+            OptionAnalyzer(ins).bs_premium(sigma) for sigma, ins in zip(sigma_list, self.portfolio)))
         
     def value_S_gen(self, sigma_list: list) -> None:
         return lambda s: sum((ins.sign * ins.unit * s if isinstance(ins, underlying) else \
             OptionAnalyzer(ins).bs_premium_S_gen(sigma)(s) for sigma, ins in zip(sigma_list, self.portfolio)))
 
     def bs_delta(self, sigma_list: list) -> float:
-        pass
+        return sum((ins.sign * ins.unit if isinstance(ins, underlying) else \
+            OptionAnalyzer(ins).bs_delta(sigma) for sigma, ins in zip(sigma_list, self.portfolio)))
     def bs_delta_S_gen(self, sigma_list: list) -> None:
-        pass
+        return lambda s: sum((ins.sign * ins.unit if isinstance(ins, underlying) else \
+            OptionAnalyzer(ins).bs_delta_S_gen(sigma)(s) for sigma, ins in zip(sigma_list, self.portfolio)))
+
     def bs_gamma(self, sigma_list: list) -> float:
-        pass
+        return sum((OptionAnalyzer(ins).bs_gamma(sigma) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
+
     def bs_gamma_S_gen(self, sigma_list: list) -> None:
-        pass
+        return lambda s: sum((OptionAnalyzer(ins).bs_gamma_S_gen(sigma)(s) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
+
     def bs_vega(self, sigma_list: list) -> float:
-        pass
+        return sum((OptionAnalyzer(ins).bs_vega(sigma) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
+
     def bs_vega_S_gen(self, sigma_list: list) -> None:
-        pass
+        return lambda s: sum((OptionAnalyzer(ins).bs_vega_S_gen(sigma)(s) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
+
     def bs_theta(self, sigma_list: list) -> float:
-        pass
+        return sum((OptionAnalyzer(ins).bs_theta(sigma) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
+
     def bs_theta_S_gen(self, sigma_list: list) -> None:
-        pass
+        return lambda s: sum((OptionAnalyzer(ins).bs_theta_S_gen(sigma)(s) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
+
     def bs_rho(self, sigma_list: list) -> float:
-        pass
+        return sum((OptionAnalyzer(ins).bs_rho(sigma) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
+
     def bs_rho_S_gen(self, sigma_list: list) -> None:
-        pass
+        return lambda s: sum((OptionAnalyzer(ins).bs_rho_S_gen(sigma)(s) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
+
     def bs_greek_plot(self, sigma_list: list) -> None:
-        pass
+        value_func = self.value_S_gen(sigma_list)
+        delta_func = self.bs_delta_S_gen(sigma_list)
+        gamma_func = self.bs_gamma_S_gen(sigma_list)
+        vega_func = self.bs_vega_S_gen(sigma_list)
+        theta_func = self.bs_theta_S_gen(sigma_list)
+        rho_func = self.bs_rho_S_gen(sigma_list)
+        max_strike = max([ind_pos.price if isinstance(ind_pos, underlying) else ind_pos.strike for ind_pos in self.portfolio])
+        x_domain = np.linspace(max_strike * 0.3, max_strike * 1.7, 1000)
+        func_list = [value_func, delta_func, gamma_func, vega_func, theta_func, rho_func]
+        plot_name = "Greeks Plot (Black-Scholes)"
+        local_plotter = FuncPlotter(
+            domain = x_domain,
+            func_list = func_list,
+            plot_name = plot_name,
+            name_list = ["Value", "Delta", "Gamma", "Vega", "Theta", "Rho"]
+        )
+        local_plotter.plot()
     
 if __name__ == "__main__":
     test_option = option(1, 100, 4, 1, 1, "Test Option", 0.6, 100, 0.04, 0.001)
