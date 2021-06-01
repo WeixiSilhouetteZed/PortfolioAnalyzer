@@ -6,6 +6,8 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from traitlets.traitlets import Instance
 import streamlit as st 
+
+ANNUAL = 256
 class option:
     def __init__(
         self, 
@@ -100,6 +102,9 @@ class OptionAnalyzer:
         self.option = option
         self.d_1 = None
         self.d_2 = None
+        self.sign = self.option.sign
+        self.unit = self.option.unit
+        self.mult = self.sign * self.unit
     
     def update_d(self, sigma: float) -> None:
         self.d_1 = (np.log(self.option.s / self.option.strike) + (self.option.r - self.option.delta + 0.5 * sigma ** 2) * self.option.expiry) / (sigma * np.sqrt(self.option.expiry))
@@ -113,40 +118,40 @@ class OptionAnalyzer:
     def bs_premium(self, sigma: float) -> float:
         self.update_d(sigma)
         S, D, T, K, r, d_1, d_2 = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2
-        return S * np.exp(- D * T) * stats.norm.cdf(d_1) - K * np.exp(- r * T) * stats.norm.cdf(d_2) if self.option.cp == "C" else - S * np.exp(- D * T) * stats.norm.cdf(-d_1) + K * np.exp(- r * T) * stats.norm.cdf(-d_2)
+        return self.mult * S * np.exp(- D * T) * stats.norm.cdf(d_1) - K * np.exp(- r * T) * stats.norm.cdf(d_2) if self.option.cp == "C" else - self.mult * S * np.exp(- D * T) * stats.norm.cdf(-d_1) + K * np.exp(- r * T) * stats.norm.cdf(-d_2)
     
     def bs_premium_S_gen(self, sigma: float) -> None:
         D, T, K, r = self.option.delta, self.option.expiry, self.option.strike, self.option.r
         d_1_func, d_2_func = self.d_func_S_gen(sigma)
-        bs_premium_call_func = lambda s: s * np.exp(- D * T) * stats.norm.cdf(d_1_func(s)) - K * np.exp(- r * T) * stats.norm.cdf(d_2_func(s))
-        bs_premium_put_func = lambda s: -s * np.exp(- D * T) * stats.norm.cdf(-d_1_func(s)) + K * np.exp(- r * T) * stats.norm.cdf(-d_2_func(s))
+        bs_premium_call_func = lambda s: self.mult * s * np.exp(- D * T) * stats.norm.cdf(d_1_func(s)) - K * np.exp(- r * T) * stats.norm.cdf(d_2_func(s))
+        bs_premium_put_func = lambda s: -self.mult * s * np.exp(- D * T) * stats.norm.cdf(-d_1_func(s)) + K * np.exp(- r * T) * stats.norm.cdf(-d_2_func(s))
         return bs_premium_call_func if self.option.cp == "C" else bs_premium_put_func
 
     def bs_delta(self, sigma: float) -> float:
         self.update_d(sigma)
-        return np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(self.d_1) if self.option.cp == "C" else -np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(-self.d_1)
+        return self.mult * np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(self.d_1) if self.option.cp == "C" else -self.mult * np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(-self.d_1)
 
     def bs_delta_S_gen(self, sigma: float) -> None:
         d_1_func, _ = self.d_func_S_gen(sigma)
-        bs_delta_func = lambda s: np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(d_1_func(s)) if self.option.cp == "C" else -np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(-d_1_func(s))
-        return bs_delta_func
+        bs_delta_func = lambda s: np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(d_1_func(s)) if self.option.cp == "C" else -self.mult * np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(-d_1_func(s))
+        return self.mult * bs_delta_func
 
     def bs_gamma(self, sigma: float) -> float:
         self.update_d(sigma)
-        return np.exp(- self.option.delta * self.option.expiry) * stats.norm.pdf(self.d_1) / (self.option.s * sigma * np.sqrt(self.option.expiry))
+        return self.mult * np.exp(- self.option.delta * self.option.expiry) * stats.norm.pdf(self.d_1) / (self.option.s * sigma * np.sqrt(self.option.expiry))
 
     def bs_gamma_S_gen(self, sigma: float) -> None:
         d_1_func, _ = self.d_func_S_gen(sigma)
-        bs_gamma_func = lambda s: np.exp(- self.option.delta * self.option.expiry) * stats.norm.pdf(d_1_func(s)) / (self.option.s * sigma * np.sqrt(self.option.expiry))
+        bs_gamma_func = lambda s: self.mult * np.exp(- self.option.delta * self.option.expiry) * stats.norm.pdf(d_1_func(s)) / (self.option.s * sigma * np.sqrt(self.option.expiry))
         return bs_gamma_func
 
     def bs_vega(self, sigma: float) -> float:
         self.update_d(sigma)
-        return self.option.s * np.exp(- self.option.delta * self.option.expiry) * stats.norm.pdf(self.d_1) * np.sqrt(self.option.expiry)
+        return self.mult * self.option.s * np.exp(- self.option.delta * self.option.expiry) * stats.norm.pdf(self.d_1) * np.sqrt(self.option.expiry)
 
     def bs_vega_S_gen(self, sigma: float) -> None:
         d_1_func, _ = self.d_func_S_gen(sigma)
-        bs_vega_func = lambda s: s * np.exp(- self.option.delta * self.option.expiry) * stats.norm.pdf(d_1_func(s)) * np.sqrt(self.option.expiry)
+        bs_vega_func = lambda s: self.mult * s * np.exp(- self.option.delta * self.option.expiry) * stats.norm.pdf(d_1_func(s)) * np.sqrt(self.option.expiry)
         return bs_vega_func
 
     def bs_theta(self, sigma: float) -> float:
@@ -154,43 +159,62 @@ class OptionAnalyzer:
         S, D, T, K, r, d_1, d_2 = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2 
         call_theta = D * S * np.exp(- D * T) * stats.norm.cdf(d_1) - r * K * np.exp(- r * T) * stats.norm.cdf(d_2) - K * np.exp(- r * T) * stats.norm.pdf(d_2) * sigma / (2 * np.sqrt(T))
         put_theta = call_theta + (r * K * np.exp(- r * T) - D * S * np.exp(- D * T)) / 365
-        return call_theta if self.option.cp == "C" else put_theta
+        return self.mult * call_theta if self.option.cp == "C" else self.mult * put_theta
 
     def bs_theta_S_gen(self, sigma: float) -> None:
         d_1_func, d_2_func = self.d_func_S_gen(sigma)
         D, T, K, r = self.option.delta, self.option.expiry, self.option.strike, self.option.r
-        call_theta_func = lambda s: D * s * np.exp(- D * T) * stats.norm.cdf(d_1_func(s)) - r * K * np.exp(- r * T) * stats.norm.cdf(d_2_func(s)) - K * np.exp(- r * T) * stats.norm.pdf(d_2_func(s)) * sigma / (2 * np.sqrt(T))
-        put_theta_func = lambda s: call_theta_func(s) + (r * K * np.exp(- r * T) - D * s * np.exp(- D * T)) / 365
+        call_theta_func = lambda s: self.mult * D * s * np.exp(- D * T) * stats.norm.cdf(d_1_func(s)) - r * K * np.exp(- r * T) * stats.norm.cdf(d_2_func(s)) - K * np.exp(- r * T) * stats.norm.pdf(d_2_func(s)) * sigma / (2 * np.sqrt(T))
+        put_theta_func = lambda s: self.mult * (call_theta_func(s) + (r * K * np.exp(- r * T) - D * s * np.exp(- D * T)) / ANNUAL)
         return call_theta_func if self.option.cp == "C" else put_theta_func
 
     def bs_rho(self, sigma: float) -> float:
         self.update_d(sigma)
         _, _, T, K, r, _, d_2 = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2 
         common = T * K * np.exp(-r * T)
-        return common * stats.norm.cdf(d_2) if self.option.cp == "C" else - common * stats.norm.cdf(-d_2)
+        return self.mult * common * stats.norm.cdf(d_2) if self.option.cp == "C" else - self.mult * common * stats.norm.cdf(-d_2)
 
     def bs_rho_S_gen(self, sigma: float) -> None:
         _, d_2_func = self.d_func_S_gen(sigma)
         D, T, K, r = self.option.delta, self.option.expiry, self.option.strike, self.option.r
-        call_rho_func = lambda s: T * K * np.exp(-r * T) * stats.norm.cdf(d_2_func(s))
-        put_rho_func = lambda s: call_rho_func(s) - T * K * stats.norm.cdf(-d_2_func(s))
+        call_rho_func = lambda s: self.mult * T * K * np.exp(-r * T) * stats.norm.cdf(d_2_func(s))
+        put_rho_func = lambda s: self.mult * (call_rho_func(s) - T * K * stats.norm.cdf(-d_2_func(s)))
         return call_rho_func if self.option.cp == "C" else put_rho_func
 
     def bs_vanna(self, sigma: float) -> float:
         self.update_d(sigma)
         _, D, T, _, _, d_1, _ = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2 
-        return T * np.exp(- D * T) * (stats.norm.pdf(d_1) - (d_1 * stats.norm.pdf(d_1) / (sigma * np.sqrt(T))))
+        return self.mult * T * np.exp(- D * T) * (stats.norm.pdf(d_1) - (d_1 * stats.norm.pdf(d_1) / (sigma * np.sqrt(T))))
 
     def bs_vanna_S_gen(self, sigma: float) -> None:
         d_1_func, _ = self.d_func_S_gen(sigma)
         _, D, T, _, _  = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r
-        return lambda s: T * np.exp(- D * T) * (stats.norm.pdf(d_1_func(s)) - (d_1_func(s) * stats.norm.pdf(d_1_func(s)) / (sigma * np.sqrt(T))))
+        return lambda s: self.mult * T * np.exp(- D * T) * (stats.norm.pdf(d_1_func(s)) - (d_1_func(s) * stats.norm.pdf(d_1_func(s)) / (sigma * np.sqrt(T))))
 
     def bs_charm(self, sigma: float) -> float:
         self.update_d(sigma)
-        S, D, T, K, r, d_1, d_2 = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2 
+        S, D, T, K, r, d_1, _ = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2 
         call_charm = D * np.exp(- D * T) * stats.norm.cdf(d_1) - stats.norm.pdf(d_1) * (- np.log(S / K) / (2 * sigma * (T ** (3/2))) + (r - D + 0.5 * sigma ** 2) / (2 * sigma * np.sqrt(T)))
-        pass
+        put_charm = - D * np.exp(- D * T) + call_charm
+        return self.mult * call_charm if self.option.cp == "C" else self.mult * put_charm
+    
+    def bs_charm_S_gen(self, sigma: float) -> None:
+        d_1_func, _ = self.d_func_S_gen(sigma)
+        _, D, T, K, r  = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r
+        call_charm_func = lambda s: self.mult * (D * np.exp(- D * T) * stats.norm.cdf(d_1_func(s)) - stats.norm.pdf(d_1_func(s)) * (- np.log(s / K) / (2 * sigma * (T ** (3/2))) + (r - D + 0.5 * sigma ** 2) / (2 * sigma * np.sqrt(T))))
+        put_charm_func = lambda s: - self.mult * (D * np.exp(- D * T) + call_charm_func(s))
+        return call_charm_func if self.option.cp == "C" else put_charm_func
+
+    def bs_vomma(self, sigma: float) -> None:
+        self.update_d(sigma)
+        S, D, T, _, _, d_1, _ = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2 
+        return self.mult * T * S * np.exp(- D * T) * (d_1 * d_1 * stats.norm.pdf(d_1) - d_1 * stats.norm.pdf(d_1) * np.sqrt(T))
+
+    def bs_vomma_S_gen(self, sigma: float) -> None:
+        d_1_func, _ = self.d_func_S_gen(sigma)
+        _, D, T, _, _  = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r
+        return lambda s: self.mult * T * s * np.exp(- D * T) * (d_1_func(s) * d_1_func(s) * stats.norm.pdf(d_1_func(s)) - d_1_func(s) * stats.norm.pdf(d_1_func(s)) * np.sqrt(T))
+
     def bs_greek_plot(self, sigma: float, inter: bool = False) -> None:
         premium_func = self.bs_premium_S_gen(sigma)
         delta_func = self.bs_delta_S_gen(sigma)
@@ -199,8 +223,9 @@ class OptionAnalyzer:
         theta_func = self.bs_theta_S_gen(sigma)
         rho_func = self.bs_rho_S_gen(sigma)
         vanna_func = self.bs_vanna_S_gen(sigma)
+        vomma_func = self.bs_vomma_S_gen(sigma)
         x_domain = np.linspace(self.option.strike * 0.3, self.option.strike * 1.7, 1000)
-        func_list = [premium_func, delta_func, gamma_func, vega_func, theta_func, rho_func, vanna_func]
+        func_list = [premium_func, delta_func, gamma_func, vega_func, theta_func, rho_func, vanna_func, vomma_func]
         plot_name = "Greeks Plot (Black-Scholes)"
         local_plotter = FuncPlotter(
             domain = x_domain,
@@ -231,7 +256,7 @@ class FuncPlotter:
         domain: np.array,
         func_list: list,
         plot_name: str,
-        name_list: list = ["Premium", "Delta", "Gamma", "Vega", "Theta", "Rho", "Vanna"]):
+        name_list: list = ["Premium", "Delta", "Gamma", "Vega", "Theta", "Rho", "Vanna", "Charm"]):
         self.domain = domain
         self.func_list = func_list
         self.plot_row = len(self.func_list)
@@ -271,6 +296,7 @@ class PortfolioAnalyzer:
     def bs_delta(self, sigma_list: list) -> float:
         return sum((ins.sign * ins.unit if isinstance(ins, underlying) else \
             OptionAnalyzer(ins).bs_delta(sigma) for sigma, ins in zip(sigma_list, self.portfolio)))
+
     def bs_delta_S_gen(self, sigma_list: list) -> None:
         return lambda s: sum((ins.sign * ins.unit if isinstance(ins, underlying) else \
             OptionAnalyzer(ins).bs_delta_S_gen(sigma)(s) for sigma, ins in zip(sigma_list, self.portfolio)))
@@ -298,6 +324,24 @@ class PortfolioAnalyzer:
 
     def bs_rho_S_gen(self, sigma_list: list) -> None:
         return lambda s: sum((OptionAnalyzer(ins).bs_rho_S_gen(sigma)(s) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
+    
+    def bs_vanna(self, sigma_list: list) -> float:
+        return sum((OptionAnalyzer(ins).bs_vanna(sigma) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
+    
+    def bs_vanna_S_gen(self, sigma_list: list) -> None:
+        return lambda s: sum((OptionAnalyzer(ins).bs_vanna_S_gen(sigma)(s) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
+
+    def bs_charm(self, sigma_list: list) -> float:
+        return sum((OptionAnalyzer(ins).bs_charm(sigma) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
+    
+    def bs_charm_S_gen(self, sigma_list: list) -> None:
+        return lambda s: sum((OptionAnalyzer(ins).bs_charm_S_gen(sigma)(s) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
+
+    def bs_vomma(self, sigma_list: list) -> float:
+        return sum((OptionAnalyzer(ins).bs_vomma(sigma) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
+    
+    def bs_vomma_S_gen(self, sigma_list: list) -> None:
+        return lambda s: sum((OptionAnalyzer(ins).bs_vomma_S_gen(sigma)(s) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
 
     def bs_greek_plot(self, sigma_list: list, inter = False) -> None:
         value_func = self.value_S_gen(sigma_list)
@@ -306,15 +350,18 @@ class PortfolioAnalyzer:
         vega_func = self.bs_vega_S_gen(sigma_list)
         theta_func = self.bs_theta_S_gen(sigma_list)
         rho_func = self.bs_rho_S_gen(sigma_list)
+        vanna_func = self.bs_vanna_S_gen(sigma_list)
+        charm_func = self.bs_charm_S_gen(sigma_list)
+        vomma_func = self.bs_vomma_S_gen(sigma_list)
         max_strike = max([ind_pos.price if isinstance(ind_pos, underlying) else ind_pos.strike for ind_pos in self.portfolio])
         x_domain = np.linspace(max_strike * 0.3, max_strike * 1.7, 1000)
-        func_list = [value_func, delta_func, gamma_func, vega_func, theta_func, rho_func]
+        func_list = [value_func, delta_func, gamma_func, vega_func, theta_func, rho_func, vanna_func, charm_func, vomma_func]
         plot_name = "Greeks Plot (Black-Scholes)"
         local_plotter = FuncPlotter(
             domain = x_domain,
             func_list = func_list,
             plot_name = plot_name,
-            name_list = ["Value", "Delta", "Gamma", "Vega", "Theta", "Rho"]
+            name_list = ["Value", "Delta", "Gamma", "Vega", "Theta", "Rho", "Vanna", "Charm", "Vomma"]
         )
         if inter:
             fig = local_plotter.plot(inter)

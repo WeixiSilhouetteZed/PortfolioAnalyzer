@@ -15,9 +15,9 @@ st.title("Option Portfolio Analyzer")
 
 @st.cache(allow_output_mutation = True)
 def persistdata():
-    return dict(), OA.portfolio([]), list(), list()
+    return dict(), OA.portfolio([]), list()
 
-pos_dict, port, name_list, current_name_list = persistdata()
+pos_dict, port, name_list = persistdata()
 
 portfolio_selection = None
 
@@ -26,7 +26,6 @@ def get_pos_list(name_list: list) -> list:
     return [pos_dict[name] for name in name_list]
 
 with st.sidebar:
-    port.pos = get_pos_list(current_name_list)
     st.info("Welcome to Option Portfolio Analyzer!")
     c_p_u = st.selectbox(
         "Call/Put/Underlying",
@@ -61,23 +60,20 @@ if add_new_pos:
         pos = OA.option(c_or_p, k, premium, l_or_s, unit, name, expiry, s, r, delta)
     else:
         pos = OA.underlying(s, l_or_s, unit, name)
+        
     pos_dict[pos.name] = pos
     port.pos.append(pos)  
     name_list.append(pos.name)
-    current_name_list.append(pos.name)
 
 portfolio_selection = st.multiselect(
         "Portfolio Positions",
         name_list,
-        current_name_list
+        []
     )
-current_name_list = portfolio_selection
 sigma_box = st.number_input("Volatility", min_value = 1e-5, value = 0.1)
 if portfolio_selection:
     port.pos = [pos_dict[name] for name in portfolio_selection]
     port_anal = OA.PortfolioAnalyzer(port)
-    print(len(portfolio_selection))
-    print(pos_dict)
     port_anal.bs_greek_plot([sigma_box] * len(portfolio_selection), True)
 
 
