@@ -35,6 +35,7 @@ class option:
             return lambda x: self.unit * self.sign * max(x - self.strike, 0)
         else:
             return lambda x: self.unit * self.sign * max(self.strike - x, 0)
+
     def get_pnl_func(self):
         if self.cp == "C":
             return lambda x: self.unit * self.sign * max(x - self.strike, 0) - self.sign * self.price * self.unit
@@ -175,6 +176,21 @@ class OptionAnalyzer:
         put_rho_func = lambda s: call_rho_func(s) - T * K * stats.norm.cdf(-d_2_func(s))
         return call_rho_func if self.option.cp == "C" else put_rho_func
 
+    def bs_vanna(self, sigma: float) -> float:
+        self.update_d(sigma)
+        _, D, T, _, _, d_1, _ = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2 
+        return T * np.exp(- D * T) * (stats.norm.pdf(d_1) - (d_1 * stats.norm.pdf(d_1) / (sigma * np.sqrt(T))))
+
+    def bs_vanna_S_gen(self, sigma: float) -> None:
+        d_1_func, _ = self.d_func_S_gen(sigma)
+        _, D, T, _, _  = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r
+        return lambda s: T * np.exp(- D * T) * (stats.norm.pdf(d_1_func(s)) - (d_1_func(s) * stats.norm.pdf(d_1_func(s)) / (sigma * np.sqrt(T))))
+
+    def bs_charm(self, sigma: float) -> float:
+        self.update_d(sigma)
+        S, D, T, K, r, d_1, d_2 = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2 
+        call_charm = D * np.exp(- D * T) * stats.norm.cdf(d_1) - stats.norm.pdf(d_1) * (- np.log(S / K) / (2 * sigma * (T ** (3/2))) + (r - D + 0.5 * sigma ** 2) / (2 * sigma * np.sqrt(T)))
+        pass
     def bs_greek_plot(self, sigma: float) -> None:
         premium_func = self.bs_premium_S_gen(sigma)
         delta_func = self.bs_delta_S_gen(sigma)
@@ -182,8 +198,9 @@ class OptionAnalyzer:
         vega_func = self.bs_vega_S_gen(sigma)
         theta_func = self.bs_theta_S_gen(sigma)
         rho_func = self.bs_rho_S_gen(sigma)
+        vanna_func = self.bs_vanna_S_gen(sigma)
         x_domain = np.linspace(self.option.strike * 0.3, self.option.strike * 1.7, 1000)
-        func_list = [premium_func, delta_func, gamma_func, vega_func, theta_func, rho_func]
+        func_list = [premium_func, delta_func, gamma_func, vega_func, theta_func, rho_func, vanna_func]
         plot_name = "Greeks Plot (Black-Scholes)"
         local_plotter = FuncPlotter(
             domain = x_domain,
@@ -210,7 +227,7 @@ class FuncPlotter:
         domain: np.array,
         func_list: list,
         plot_name: str,
-        name_list: list = ["Premium", "Delta", "Gamma", "Vega", "Theta", "Rho"]):
+        name_list: list = ["Premium", "Delta", "Gamma", "Vega", "Theta", "Rho", "Vanna"]):
         self.domain = domain
         self.func_list = func_list
         self.plot_row = len(self.func_list)
