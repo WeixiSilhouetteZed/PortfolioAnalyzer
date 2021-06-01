@@ -118,7 +118,7 @@ class OptionAnalyzer:
     def bs_premium(self, sigma: float) -> float:
         self.update_d(sigma)
         S, D, T, K, r, d_1, d_2 = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2
-        return self.mult * S * np.exp(- D * T) * stats.norm.cdf(d_1) - K * np.exp(- r * T) * stats.norm.cdf(d_2) if self.option.cp == "C" else - self.mult * S * np.exp(- D * T) * stats.norm.cdf(-d_1) + K * np.exp(- r * T) * stats.norm.cdf(-d_2)
+        return self.mult * (S * np.exp(- D * T) * stats.norm.cdf(d_1) - K * np.exp(- r * T) * stats.norm.cdf(d_2)) if self.option.cp == "C" else self.mult * (- S * np.exp(- D * T) * stats.norm.cdf(-d_1) + K * np.exp(- r * T) * stats.norm.cdf(-d_2))
     
     def bs_premium_S_gen(self, sigma: float) -> None:
         D, T, K, r = self.option.delta, self.option.expiry, self.option.strike, self.option.r
@@ -133,8 +133,8 @@ class OptionAnalyzer:
 
     def bs_delta_S_gen(self, sigma: float) -> None:
         d_1_func, _ = self.d_func_S_gen(sigma)
-        bs_delta_func = lambda s: np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(d_1_func(s)) if self.option.cp == "C" else -self.mult * np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(-d_1_func(s))
-        return self.mult * bs_delta_func
+        bs_delta_func = lambda s: self.mult * np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(d_1_func(s)) if self.option.cp == "C" else -self.mult * np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(-d_1_func(s))
+        return bs_delta_func
 
     def bs_gamma(self, sigma: float) -> float:
         self.update_d(sigma)
