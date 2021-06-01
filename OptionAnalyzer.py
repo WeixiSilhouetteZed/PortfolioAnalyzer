@@ -5,7 +5,7 @@ import statsmodels as sm
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from traitlets.traitlets import Instance
-
+import streamlit as st 
 class option:
     def __init__(
         self, 
@@ -191,7 +191,7 @@ class OptionAnalyzer:
         S, D, T, K, r, d_1, d_2 = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2 
         call_charm = D * np.exp(- D * T) * stats.norm.cdf(d_1) - stats.norm.pdf(d_1) * (- np.log(S / K) / (2 * sigma * (T ** (3/2))) + (r - D + 0.5 * sigma ** 2) / (2 * sigma * np.sqrt(T)))
         pass
-    def bs_greek_plot(self, sigma: float) -> None:
+    def bs_greek_plot(self, sigma: float, inter: bool = False) -> None:
         premium_func = self.bs_premium_S_gen(sigma)
         delta_func = self.bs_delta_S_gen(sigma)
         gamma_func = self.bs_gamma_S_gen(sigma)
@@ -207,7 +207,11 @@ class OptionAnalyzer:
             func_list = func_list,
             plot_name = plot_name
         )
-        local_plotter.plot()
+        if inter:
+            fig = local_plotter.plot(inter)
+            st.plotly_chart(fig)
+        else:
+            local_plotter.plot()
 
     def implied_vol(self, s: float = None, sigma: float = 0.01, maxiter = 100, tol = 1.0e-5):
         if s is None:
@@ -234,7 +238,7 @@ class FuncPlotter:
         self.name = plot_name
         self.func_name = name_list
 
-    def plot(self):
+    def plot(self, inter = False):
         fig = make_subplots(
             rows = self.plot_row, 
             cols = 1,
@@ -248,8 +252,9 @@ class FuncPlotter:
                 name = self.func_name[index]
             ), row = index + 1, col = 1)
         fig.update_layout(height = 1200, width = 1000, title_text = self.name)
+        if inter:
+            return fig 
         fig.show()
-
 class PortfolioAnalyzer:
     def __init__(self, portfolio: portfolio) -> None:
         self.portfolio = portfolio.pos
@@ -294,7 +299,7 @@ class PortfolioAnalyzer:
     def bs_rho_S_gen(self, sigma_list: list) -> None:
         return lambda s: sum((OptionAnalyzer(ins).bs_rho_S_gen(sigma)(s) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
 
-    def bs_greek_plot(self, sigma_list: list) -> None:
+    def bs_greek_plot(self, sigma_list: list, inter = False) -> None:
         value_func = self.value_S_gen(sigma_list)
         delta_func = self.bs_delta_S_gen(sigma_list)
         gamma_func = self.bs_gamma_S_gen(sigma_list)
@@ -311,7 +316,11 @@ class PortfolioAnalyzer:
             plot_name = plot_name,
             name_list = ["Value", "Delta", "Gamma", "Vega", "Theta", "Rho"]
         )
-        local_plotter.plot()
+        if inter:
+            fig = local_plotter.plot(inter)
+            st.plotly_chart(fig)
+        else:
+            local_plotter.plot()
     
 if __name__ == "__main__":
     test_option = option(1, 100, 4, 1, 1, "Test Option", 0.6, 100, 0.04, 0.001)
