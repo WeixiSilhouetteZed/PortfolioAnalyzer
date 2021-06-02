@@ -184,10 +184,11 @@ keyPrefix = ""
 
 [theme]
 primaryColor="#f63333"
-backgroundColor="#5701f5"
-secondaryBackgroundColor="#001d79"
-textColor="#ffffff"
-font="serif"
+backgroundColor="#b1fbef"
+secondaryBackgroundColor="#85bfc1"
+textColor="#060606"
+
+
 
 
 

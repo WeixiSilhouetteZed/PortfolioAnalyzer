@@ -13,6 +13,12 @@ st.set_page_config(
 
 st.title("Option Portfolio Analyzer")
 
+st.write("By Bill Zhuo")
+
+st.markdown("Input call/put/underlying from the sidebar on the left. \
+    All positions need to be named uniquely. Select positions to \
+        consist portfolios and check the portfolio risk visualizations.")
+
 @st.cache(allow_output_mutation = True)
 def persistdata():
     return dict(), OA.portfolio([]), list()
@@ -74,7 +80,8 @@ sigma_box = st.number_input("Volatility", min_value = 1e-5, value = 0.1)
 if portfolio_selection:
     port.pos = [pos_dict[name] for name in portfolio_selection]
     port_anal = OA.PortfolioAnalyzer(port)
-    port_anal.bs_greek_plot([sigma_box] * len(portfolio_selection), True)
-
+    with st.spinner('Wait for it...'):
+        port_anal.bs_greek_plot([sigma_box] * len(portfolio_selection), True)
+    st.success('Done!')
 
 
