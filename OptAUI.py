@@ -2,6 +2,8 @@ import OptionAnalyzer as OA
 import streamlit as st 
 from PIL import Image
 
+from streamlit import caching
+
 img = Image.open("greek-helmet.png")
 
 st.set_page_config(
@@ -58,7 +60,7 @@ with st.sidebar:
             delta = st.number_input("Dividend Yield")
         
     add_new_pos = st.button("Add New Position")
-
+    cache_button = st.button("Cache Clear")
 if add_new_pos:
     if c_p_u != "Underlying":
         c_or_p = 1 if c_p_u == "Call" else 0
@@ -82,5 +84,9 @@ if portfolio_selection:
     with st.spinner('Wait for it...'):
         port_anal.bs_greek_plot([sigma_box] * len(portfolio_selection), True)
     st.success('Done!')
+
+if cache_button:
+    caching.clear_cache()
+
 
 
