@@ -5,10 +5,11 @@
 serverPort = 8502
 
 [theme]
-primaryColor="#f63333"
-backgroundColor="#b1fbef"
-secondaryBackgroundColor="#85bfc1"
-textColor="#060606"
+base="dark"
+primaryColor="#d33682"
+backgroundColor="#002b36"
+secondaryBackgroundColor="#586e75"
+
 
 
 
