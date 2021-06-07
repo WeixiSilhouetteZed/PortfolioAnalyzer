@@ -1,10 +1,7 @@
 import numpy as np 
 import scipy.stats as stats 
-import scipy.optimize as opt
-import statsmodels as sm 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from traitlets.traitlets import Instance
 import streamlit as st 
 
 ANNUAL = 256
