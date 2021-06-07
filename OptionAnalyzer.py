@@ -101,7 +101,7 @@ class OptionAnalyzer:
         self.d_2 = None
         self.sign = self.option.sign
         self.unit = self.option.unit
-        self.mult = self.sign * self.unit
+        self.mult = self.option.sign * self.option.unit
     
     def update_d(self, sigma: float) -> None:
         self.d_1 = (np.log(self.option.s / self.option.strike) + (self.option.r - self.option.delta + 0.5 * sigma ** 2) * self.option.expiry) / (sigma * np.sqrt(self.option.expiry))
@@ -120,8 +120,8 @@ class OptionAnalyzer:
     def bs_premium_S_gen(self, sigma: float) -> None:
         D, T, K, r = self.option.delta, self.option.expiry, self.option.strike, self.option.r
         d_1_func, d_2_func = self.d_func_S_gen(sigma)
-        bs_premium_call_func = lambda s: self.mult * s * np.exp(- D * T) * stats.norm.cdf(d_1_func(s)) - K * np.exp(- r * T) * stats.norm.cdf(d_2_func(s))
-        bs_premium_put_func = lambda s: -self.mult * s * np.exp(- D * T) * stats.norm.cdf(-d_1_func(s)) + K * np.exp(- r * T) * stats.norm.cdf(-d_2_func(s))
+        bs_premium_call_func = lambda s: self.mult * (s * np.exp(- D * T) * stats.norm.cdf(d_1_func(s)) - K * np.exp(- r * T) * stats.norm.cdf(d_2_func(s)))
+        bs_premium_put_func = lambda s: self.mult * (- s * np.exp(- D * T) * stats.norm.cdf(-d_1_func(s)) + K * np.exp(- r * T) * stats.norm.cdf(-d_2_func(s)))
         return bs_premium_call_func if self.option.cp == "C" else bs_premium_put_func
 
     def bs_delta(self, sigma: float) -> float:
@@ -155,14 +155,15 @@ class OptionAnalyzer:
         self.update_d(sigma)
         S, D, T, K, r, d_1, d_2 = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2 
         call_theta = D * S * np.exp(- D * T) * stats.norm.cdf(d_1) - r * K * np.exp(- r * T) * stats.norm.cdf(d_2) - K * np.exp(- r * T) * stats.norm.pdf(d_2) * sigma / (2 * np.sqrt(T))
-        put_theta = call_theta + (r * K * np.exp(- r * T) - D * S * np.exp(- D * T)) / 365
+        put_theta = call_theta + (r * K * np.exp(- r * T) - D * S * np.exp(- D * T)) / ANNUAL
+        print(call_theta)
         return self.mult * call_theta if self.option.cp == "C" else self.mult * put_theta
 
     def bs_theta_S_gen(self, sigma: float) -> None:
         d_1_func, d_2_func = self.d_func_S_gen(sigma)
         D, T, K, r = self.option.delta, self.option.expiry, self.option.strike, self.option.r
-        call_theta_func = lambda s: self.mult * D * s * np.exp(- D * T) * stats.norm.cdf(d_1_func(s)) - r * K * np.exp(- r * T) * stats.norm.cdf(d_2_func(s)) - K * np.exp(- r * T) * stats.norm.pdf(d_2_func(s)) * sigma / (2 * np.sqrt(T))
-        put_theta_func = lambda s: self.mult * (call_theta_func(s) + (r * K * np.exp(- r * T) - D * s * np.exp(- D * T)) / ANNUAL)
+        call_theta_func = lambda s: self.mult * (D * s * np.exp(- D * T) * stats.norm.cdf(d_1_func(s)) - r * K * np.exp(- r * T) * stats.norm.cdf(d_2_func(s)) - K * np.exp(- r * T) * stats.norm.pdf(d_2_func(s)) * sigma / (2 * np.sqrt(T)))
+        put_theta_func = lambda s: (call_theta_func(s) + (r * K * np.exp(- r * T) - D * s * np.exp(- D * T)) / ANNUAL)
         return call_theta_func if self.option.cp == "C" else put_theta_func
 
     def bs_rho(self, sigma: float) -> float:
@@ -365,3 +366,14 @@ class PortfolioAnalyzer:
             st.plotly_chart(fig)
         else:
             local_plotter.plot()
+
+if __name__ == "__main__":
+    c1 = option(1, 95, 1, 1, 1, "C1", 1, 100)
+    c1_a = OptionAnalyzer(c1)
+    c2 = option(1, 100, 1, -1, 2, "C1", 1, 100)
+    c2_a = OptionAnalyzer(c2)
+    c3 = option(1, 105, 1, 1, 1, "C1", 1, 100)
+    c3_a = OptionAnalyzer(c3)
+    print(c1_a.bs_theta(0.1))
+    print(c2_a.bs_theta(0.1))
+    print(c3_a.bs_theta(0.1))
