@@ -368,8 +368,3 @@ class PortfolioAnalyzer:
             st.plotly_chart(fig)
         else:
             local_plotter.plot()
-    
-if __name__ == "__main__":
-    test_option = option(1, 100, 4, 1, 1, "Test Option", 0.6, 100, 0.04, 0.001)
-    test_option_analyzer = OptionAnalyzer(test_option)
-    test_option_analyzer.bs_delta(0.3)
