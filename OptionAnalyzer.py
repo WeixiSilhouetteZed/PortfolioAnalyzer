@@ -208,12 +208,12 @@ class OptionAnalyzer:
     def bs_vomma(self, sigma: float) -> None:
         self.update_d(sigma)
         S, D, T, _, _, d_1, _ = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2 
-        return self.mult * T * S * np.exp(- D * T) * (d_1 * d_1 * stats.norm.pdf(d_1) - d_1 * stats.norm.pdf(d_1) * np.sqrt(T))
+        return self.mult * T * S * np.exp(- D * T) * (d_1 * d_1 * stats.norm.pdf(d_1) / (sigma * np.sqrt(T)) - d_1 * stats.norm.pdf(d_1))
 
     def bs_vomma_S_gen(self, sigma: float) -> None:
         d_1_func, _ = self.d_func_S_gen(sigma)
         _, D, T, _, _  = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r
-        return lambda s: self.mult * T * s * np.exp(- D * T) * (d_1_func(s) * d_1_func(s) * stats.norm.pdf(d_1_func(s)) - d_1_func(s) * stats.norm.pdf(d_1_func(s)) * np.sqrt(T))
+        return lambda s: self.mult * T * s * np.exp(- D * T) * (d_1_func(s) * d_1_func(s) * stats.norm.pdf(d_1_func(s)) / (sigma * np.sqrt(T)) - d_1_func(s) * stats.norm.pdf(d_1_func(s)))
 
     def bs_greek_plot(self, sigma: float, inter: bool = False) -> None:
         premium_func = self.bs_premium_S_gen(sigma)

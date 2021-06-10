@@ -22,11 +22,13 @@ st.markdown("Input call/put/underlying from the sidebar on the left. \
 
 @st.cache(allow_output_mutation = True)
 def persistdata():
-    return dict(), OA.portfolio([]), list(), ""
+    return dict(), OA.portfolio([]), list(), [""]
 
 pos_dict, port, name_list, note_pad = persistdata()
 
 portfolio_selection = None
+
+note_pad_update = None
 
 def get_pos_list(name_list: list) -> list:
     return [pos_dict[name] for name in name_list]
@@ -78,9 +80,10 @@ portfolio_selection = st.multiselect(
     )
 sigma_box = st.number_input("Volatility", min_value = 1e-5, value = 0.1)
 
-note_pad_update = st.text_input("Notepad", note_pad, help = "Random stuff, others can see.")
-
-note_pad = note_pad_update
+note_pad_update = st.text_input("Notepad", note_pad[0] if note_pad is not None else "")
+if note_pad is not None:
+    note_pad.pop()
+    note_pad.append(note_pad_update)
 
 graph_col, table_col = st.beta_columns(2)
 
