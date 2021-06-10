@@ -1,8 +1,10 @@
 import numpy as np 
+import pandas as pd 
 import scipy.stats as stats 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import streamlit as st 
+import streamlit as st
+from traitlets.traitlets import Instance 
 
 ANNUAL = 256
 class option:
@@ -366,6 +368,38 @@ class PortfolioAnalyzer:
             st.plotly_chart(fig)
         else:
             local_plotter.plot()
+    
+    def position_table(self):
+        pd_list = []
+        for pos in self.portfolio:
+            temp_dict = dict(
+                name = [pos.name],
+                l_or_s = ["Long" if pos.sign == 1 else "Short"],
+                unit = [pos.unit],
+                s = [pos.price if isinstance(pos, underlying) else pos.s],
+                c_or_p = [pos.cp if isinstance(pos, option) else "None"],
+                strike = [pos.strike if isinstance(pos, option) else "None"],
+                premium = [pos.price if isinstance(pos, option) else "None"],
+                expiry = [pos.expiry if isinstance(pos, option) else "None"],
+                r = [pos.r if isinstance(pos, option) else "None"],
+                dividend = [pos.delta if isinstance(pos, option) else "None"]
+            )
+            temp_df = pd.DataFrame.from_dict(temp_dict)
+            pd_list.append(temp_df)
+        result_df = pd.concat(pd_list, axis = 0)
+        result_df.columns = [
+            "Name",
+            "Long or Short",
+            "Unit",
+            "Underlying Price",
+            "Call or Put",
+            "Strike",
+            "Premium",
+            "Expiry",
+            "Interest Rate",
+            "Dividend Yield Rate"
+        ]
+        return result_df
 
 if __name__ == "__main__":
     c1 = option(1, 95, 1, 1, 1, "C1", 1, 100)

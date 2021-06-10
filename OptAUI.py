@@ -22,12 +22,11 @@ st.markdown("Input call/put/underlying from the sidebar on the left. \
 
 @st.cache(allow_output_mutation = True)
 def persistdata():
-    return dict(), OA.portfolio([]), list()
+    return dict(), OA.portfolio([]), list(), ""
 
-pos_dict, port, name_list = persistdata()
+pos_dict, port, name_list, note_pad = persistdata()
 
 portfolio_selection = None
-
 
 def get_pos_list(name_list: list) -> list:
     return [pos_dict[name] for name in name_list]
@@ -78,11 +77,21 @@ portfolio_selection = st.multiselect(
         []
     )
 sigma_box = st.number_input("Volatility", min_value = 1e-5, value = 0.1)
+
+note_pad = st.text_input("Notepad", note_pad, help = "Random stuff, others can see.")
+
+graph_col, table_col = st.beta_columns(2)
+
 if portfolio_selection:
     port.pos = [pos_dict[name] for name in portfolio_selection]
     port_anal = OA.PortfolioAnalyzer(port)
     with st.spinner('Wait for it...'):
-        port_anal.bs_greek_plot([sigma_box] * len(portfolio_selection), True)
+        with graph_col:
+            port_anal.bs_greek_plot([sigma_box] * len(portfolio_selection), True)
+        with table_col:
+            st.subheader("Position Table")
+            position_table = port_anal.position_table()
+            st.table(position_table)
     st.success('Done!')
 
 if cache_button:
