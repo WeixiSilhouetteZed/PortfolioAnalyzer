@@ -78,7 +78,9 @@ portfolio_selection = st.multiselect(
     )
 sigma_box = st.number_input("Volatility", min_value = 1e-5, value = 0.1)
 
-note_pad = st.text_input("Notepad", note_pad, help = "Random stuff, others can see.")
+note_pad_update = st.text_input("Notepad", note_pad, help = "Random stuff, others can see.")
+
+note_pad = note_pad_update
 
 graph_col, table_col = st.beta_columns(2)
 
