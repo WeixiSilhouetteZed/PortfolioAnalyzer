@@ -114,6 +114,11 @@ class OptionAnalyzer:
         d_2_func = lambda s: d_1_func(s) - sigma * np.sqrt(self.option.expiry)
         return d_1_func, d_2_func
 
+    def d_func_t_gen(self, sigma: float, new_s:float) -> None:
+        d_1_func = lambda t: (np.log(new_s / self.option.strike) + (self.option.r - self.option.delta + 0.5 * sigma ** 2) * t) / (sigma * np.sqrt(t))
+        d_2_func = lambda t: d_1_func(new_s) - sigma * np.sqrt(t)
+        return d_1_func, d_2_func
+
     def bs_premium(self, sigma: float) -> float:
         self.update_d(sigma)
         S, D, T, K, r, d_1, d_2 = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2
@@ -126,6 +131,13 @@ class OptionAnalyzer:
         bs_premium_put_func = lambda s: self.mult * (- s * np.exp(- D * T) * stats.norm.cdf(-d_1_func(s)) + K * np.exp(- r * T) * stats.norm.cdf(-d_2_func(s)))
         return bs_premium_call_func if self.option.cp == "C" else bs_premium_put_func
 
+    def bs_premium_t_gen(self, sigma: float, new_s: float) -> None:
+        D, _, K, r = self.option.delta, self.option.expiry, self.option.strike, self.option.r
+        d_1_func, d_2_func = self.d_func_t_gen(sigma, new_s)
+        bs_premium_call_func = lambda t: self.mult * (new_s * np.exp(- D * t) * stats.norm.cdf(d_1_func(t)) - K * np.exp(- r * t) * stats.norm.cdf(d_2_func(t)))
+        bs_premium_put_func = lambda t: self.mult * (- new_s * np.exp(- D * t) * stats.norm.cdf(-d_1_func(t)) + K * np.exp(- r * t) * stats.norm.cdf(-d_2_func(t)))
+        return bs_premium_call_func if self.option.cp == "C" else bs_premium_put_func
+
     def bs_delta(self, sigma: float) -> float:
         self.update_d(sigma)
         return self.mult * np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(self.d_1) if self.option.cp == "C" else -self.mult * np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(-self.d_1)
@@ -135,13 +147,23 @@ class OptionAnalyzer:
         bs_delta_func = lambda s: self.mult * np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(d_1_func(s)) if self.option.cp == "C" else -self.mult * np.exp(- self.option.delta * self.option.expiry) * stats.norm.cdf(-d_1_func(s))
         return bs_delta_func
 
+    def bs_delta_t_gen(self, sigma: float, new_s: float) -> None:
+        d_1_func, _ = self.d_func_t_gen(sigma, new_s)
+        bs_delta_func = lambda t: self.mult * np.exp(- self.option.delta * t) * stats.norm.cdf(d_1_func(t)) if self.option.cp == "C" else -self.mult * np.exp(- self.option.delta * t) * stats.norm.cdf(-d_1_func(t))
+        return bs_delta_func
+
     def bs_gamma(self, sigma: float) -> float:
         self.update_d(sigma)
         return self.mult * np.exp(- self.option.delta * self.option.expiry) * stats.norm.pdf(self.d_1) / (self.option.s * sigma * np.sqrt(self.option.expiry))
 
     def bs_gamma_S_gen(self, sigma: float) -> None:
         d_1_func, _ = self.d_func_S_gen(sigma)
-        bs_gamma_func = lambda s: self.mult * np.exp(- self.option.delta * self.option.expiry) * stats.norm.pdf(d_1_func(s)) / (self.option.s * sigma * np.sqrt(self.option.expiry))
+        bs_gamma_func = lambda s: self.mult * np.exp(- self.option.delta * self.option.expiry) * stats.norm.pdf(d_1_func(s)) / (s * sigma * np.sqrt(self.option.expiry))
+        return bs_gamma_func
+
+    def bs_gamma_t_gen(self, sigma: float, new_s: float) -> None:
+        d_1_func, _ = self.d_func_t_gen(sigma, new_s)
+        bs_gamma_func = lambda t: self.mult * np.exp(- self.option.delta * t) * stats.norm.pdf(d_1_func(t)) / (self.option.s * sigma * np.sqrt(t))
         return bs_gamma_func
 
     def bs_vega(self, sigma: float) -> float:
@@ -151,6 +173,11 @@ class OptionAnalyzer:
     def bs_vega_S_gen(self, sigma: float) -> None:
         d_1_func, _ = self.d_func_S_gen(sigma)
         bs_vega_func = lambda s: self.mult * s * np.exp(- self.option.delta * self.option.expiry) * stats.norm.pdf(d_1_func(s)) * np.sqrt(self.option.expiry)
+        return bs_vega_func
+
+    def bs_vega_t_gen(self, sigma: float, new_s: float) -> None:
+        d_1_func, _ = self.d_func_t_gen(sigma, new_s)
+        bs_vega_func = lambda t: self.mult * new_s * np.exp(- self.option.delta * t) * stats.norm.pdf(d_1_func(t)) * np.sqrt(t)
         return bs_vega_func
 
     def bs_theta(self, sigma: float) -> float:
