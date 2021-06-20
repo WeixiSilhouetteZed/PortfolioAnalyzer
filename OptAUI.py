@@ -85,18 +85,24 @@ if note_pad is not None:
     note_pad.pop()
     note_pad.append(note_pad_update)
 
-graph_col, table_col = st.beta_columns(2)
+
+
+table_col, _ = st.beta_columns(2)
+
+graph_vs_s_col, graph_vs_t_col = st.beta_columns(2)
 
 if portfolio_selection:
     port.pos = [pos_dict[name] for name in portfolio_selection]
     port_anal = OA.PortfolioAnalyzer(port)
     with st.spinner('Wait for it...'):
-        with graph_col:
-            port_anal.bs_greek_plot([sigma_box] * len(portfolio_selection), True)
         with table_col:
             st.subheader("Position Table")
             position_table = port_anal.position_table()
             st.table(position_table)
+        with graph_vs_s_col:
+            port_anal.bs_greek_S_plot([sigma_box] * len(portfolio_selection), True)
+        with graph_vs_t_col:
+            port_anal.bs_greek_t_plot([sigma_box] * len(portfolio_selection), s, True)
     st.success('Done!')
 
 if cache_button:
