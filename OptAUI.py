@@ -20,6 +20,30 @@ st.markdown("Input call/put/underlying from the sidebar on the left. \
     All positions need to be named uniquely. Select positions to \
         consist portfolios and check the portfolio risk visualizations.")
 
+formula_expander = st.beta_expander("BS Greek Formulae", expanded=True)
+
+with formula_expander:
+    for_col = st.beta_columns((1, 1, 2, 2, 1))
+    with for_col[0]:
+        st.markdown("**Greeks**")
+        st.markdown("Delta($\Delta$)")
+        st.markdown("Gamma($\Gamma$)")
+    with for_col[1]:
+        st.markdown("**Derivative Form**")
+        st.markdown(r"$\frac{\partial V}{\partial S}$")
+        st.markdown(r"$\frac{\partial^2V}{\partial S^2}$")
+    with for_col[2]:
+        st.markdown("**Call**")
+        st.markdown("$e^{-rt}\Phi(d_1)$")
+        st.markdown(r"$\frac{e^{-rt}\phi(d_1)}{S\sigma\sqrt{t}}$")
+    with for_col[3]:
+        st.markdown("**Put**")
+        st.markdown("$e^{-rt}[\Phi(d_1)-1]$")
+        st.markdown("Same as call")
+    with for_col[4]:
+        st.markdown("Max/Min")
+
+
 @st.cache(allow_output_mutation = True)
 def persistdata():
     return dict(), OA.portfolio([]), list(), [""]
@@ -85,18 +109,24 @@ if note_pad is not None:
     note_pad.pop()
     note_pad.append(note_pad_update)
 
-graph_col, table_col = st.beta_columns(2)
+
+
+table_col, _ = st.beta_columns((5,1))
+
+graph_vs_s_col, graph_vs_t_col = st.beta_columns(2)
 
 if portfolio_selection:
     port.pos = [pos_dict[name] for name in portfolio_selection]
     port_anal = OA.PortfolioAnalyzer(port)
     with st.spinner('Wait for it...'):
-        with graph_col:
-            port_anal.bs_greek_plot([sigma_box] * len(portfolio_selection), True)
         with table_col:
             st.subheader("Position Table")
             position_table = port_anal.position_table()
             st.table(position_table)
+        with graph_vs_s_col:
+            port_anal.bs_greek_S_plot([sigma_box] * len(portfolio_selection), True)
+        with graph_vs_t_col:
+            port_anal.bs_greek_t_plot([sigma_box] * len(portfolio_selection), s, True)
     st.success('Done!')
 
 if cache_button:
