@@ -87,7 +87,7 @@ if note_pad is not None:
 
 
 
-table_col, _ = st.beta_columns(2)
+table_col, _ = st.beta_columns((5,1))
 
 graph_vs_s_col, graph_vs_t_col = st.beta_columns(2)
 

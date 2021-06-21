@@ -215,11 +215,11 @@ class OptionAnalyzer:
         put_rho_func = lambda s: self.mult * (call_rho_func(s) - T * K * stats.norm.cdf(-d_2_func(s)))
         return call_rho_func if self.option.cp == "C" else put_rho_func
 
-    def bs_rho_t_gen(self, sigma: float) -> None:
-        _, d_2_func = self.d_func_S_gen(sigma)
-        D, T, K, r = self.option.delta, self.option.expiry, self.option.strike, self.option.r
-        call_rho_func = lambda s: self.mult * T * K * np.exp(-r * T) * stats.norm.cdf(d_2_func(s))
-        put_rho_func = lambda s: self.mult * (call_rho_func(s) - T * K * stats.norm.cdf(-d_2_func(s)))
+    def bs_rho_t_gen(self, sigma: float, new_s: float) -> None:
+        _, d_2_func = self.d_func_t_gen(sigma, new_s)
+        D, _, K, r = self.option.delta, self.option.expiry, self.option.strike, self.option.r
+        call_rho_func = lambda t: self.mult * t * K * np.exp(-r * t) * stats.norm.cdf(d_2_func(t))
+        put_rho_func = lambda t: self.mult * (call_rho_func(t) - t * K * stats.norm.cdf(-d_2_func(t)))
         return call_rho_func if self.option.cp == "C" else put_rho_func
 
     def bs_vanna(self, sigma: float) -> float:
@@ -302,7 +302,7 @@ class OptionAnalyzer:
         gamma_func = self.bs_gamma_t_gen(sigma, new_s)
         vega_func = self.bs_vega_t_gen(sigma, new_s)
         theta_func = self.bs_theta_t_gen(sigma, new_s)
-        rho_func = self.bs_rho_S_gen(sigma, new_s)
+        rho_func = self.bs_rho_t_gen(sigma, new_s)
         vanna_func = self.bs_vanna_t_gen(sigma, new_s)
         vomma_func = self.bs_vomma_t_gen(sigma, new_s)
         x_domain = np.linspace(0.00001, self.option.expiry, 1000)
@@ -337,7 +337,7 @@ class FuncPlotter:
         domain: np.array,
         func_list: list,
         plot_name: str,
-        name_list: list = ["Premium", "Delta", "Gamma", "Vega", "Theta", "Rho", "Vanna", "Charm"]):
+        name_list: list = ["Premium", "Delta", "Gamma", "Vega", "Theta", "Rho", "Vanna", "Charm", "Vomma"]):
         self.domain = domain
         self.func_list = func_list
         self.plot_row = len(self.func_list)
@@ -357,7 +357,7 @@ class FuncPlotter:
                 mode = 'lines', 
                 name = self.func_name[index]
             ), row = index + 1, col = 1)
-        fig.update_layout(height = 1200, width = 1000, title_text = self.name)
+        fig.update_layout(height = 1200, width = 700, title_text = self.name)
         if inter:
             return fig 
         fig.show()
@@ -451,7 +451,7 @@ class PortfolioAnalyzer:
         return lambda s: sum((OptionAnalyzer(ins).bs_vomma_S_gen(sigma)(s) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
 
     def bs_vomma_t_gen(self, sigma_list: list, new_s: float) -> None:
-        return lambda t: sum((OptionAnalyzer(ins).bs_vomma_t_gen(sigma. new_s)(t) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
+        return lambda t: sum((OptionAnalyzer(ins).bs_vomma_t_gen(sigma, new_s)(t) for sigma, ins in zip(sigma_list, self.portfolio) if isinstance(ins, option)))
 
     def bs_greek_S_plot(self, sigma_list: list, inter = False) -> None:
         value_func = self.value_S_gen(sigma_list)
@@ -489,6 +489,7 @@ class PortfolioAnalyzer:
         vanna_func = self.bs_vanna_t_gen(sigma_list, new_s)
         charm_func = self.bs_charm_t_gen(sigma_list, new_s)
         vomma_func = self.bs_vomma_t_gen(sigma_list, new_s)
+        print([ind_pos.expiry for ind_pos in self.portfolio])
         max_expiry = max([ind_pos.expiry for ind_pos in self.portfolio if isinstance(ind_pos, option)])
         x_domain = np.linspace(0.00001, max_expiry, 1000)
         func_list = [value_func, delta_func, gamma_func, vega_func, theta_func, rho_func, vanna_func, charm_func, vomma_func]
@@ -547,3 +548,7 @@ if __name__ == "__main__":
     print(c1_a.bs_theta(0.1))
     print(c2_a.bs_theta(0.1))
     print(c3_a.bs_theta(0.1))
+    port_test = portfolio([c1, c2, c3])
+    port_anal = PortfolioAnalyzer(port_test)
+    port_anal.bs_greek_S_plot([0.2, 0.2, 0.2])
+    port_anal.bs_greek_t_plot([0.2, 0.2, 0.2], 90)
