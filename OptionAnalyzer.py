@@ -305,7 +305,7 @@ class OptionAnalyzer:
         rho_func = self.bs_rho_t_gen(sigma, new_s)
         vanna_func = self.bs_vanna_t_gen(sigma, new_s)
         vomma_func = self.bs_vomma_t_gen(sigma, new_s)
-        x_domain = np.linspace(0.00001, self.option.expiry, 1000)
+        x_domain = np.linspace(0.001, self.option.expiry, 1000)
         func_list = [premium_func, delta_func, gamma_func, vega_func, theta_func, rho_func, vanna_func, vomma_func]
         plot_name = "Greeks Plot vs t (Black-Scholes)"
         local_plotter = FuncPlotter(
@@ -337,12 +337,16 @@ class FuncPlotter:
         domain: np.array,
         func_list: list,
         plot_name: str,
-        name_list: list = ["Premium", "Delta", "Gamma", "Vega", "Theta", "Rho", "Vanna", "Charm", "Vomma"]):
+        name_list: list = ["Premium", "Delta", "Gamma", "Vega", "Theta", "Rho", "Vanna", "Charm", "Vomma"],
+        xaxis_name: str = "S",
+        xaxis_reverse: bool = False):
         self.domain = domain
         self.func_list = func_list
         self.plot_row = len(self.func_list)
         self.name = plot_name
         self.func_name = name_list
+        self.xaxis_name = xaxis_name
+        self.xaxis_reverse = xaxis_reverse
 
     def plot(self, inter = False):
         fig = make_subplots(
@@ -357,7 +361,13 @@ class FuncPlotter:
                 mode = 'lines', 
                 name = self.func_name[index]
             ), row = index + 1, col = 1)
-        fig.update_layout(height = 1200, width = 700, title_text = self.name)
+        fig.update_layout(
+            height = 1200, 
+            width = 800, 
+            title_text = self.name, 
+            xaxis_title = self.xaxis_name)
+        if self.xaxis_reverse:
+            fig.update_xaxes(autorange = "reversed")
         if inter:
             return fig 
         fig.show()
