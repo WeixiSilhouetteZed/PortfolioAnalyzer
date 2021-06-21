@@ -23,25 +23,120 @@ st.markdown("Input call/put/underlying from the sidebar on the left. \
 formula_expander = st.beta_expander("BS Greek Formulae", expanded=True)
 
 with formula_expander:
-    for_col = st.beta_columns((1, 1, 2, 2, 1))
-    with for_col[0]:
+    st.markdown("All formulae are based on BS model for options on futures. The notations are self-explanatory. \
+        The source is *Option Volatility and Pricing* by Sheldon Natenberg.")
+    for_col_1 = st.beta_columns((1, 1, 2, 2, 1))
+    st.markdown("---")
+    for_col_2 = st.beta_columns((1, 1, 2, 2, 1))
+    st.markdown("---")
+    for_col_3 = st.beta_columns((1, 1, 2, 2, 1))
+    st.markdown("---")
+    for_col_4 = st.beta_columns((1, 1, 2, 2, 1))
+    st.markdown("---")
+    for_col_5 = st.beta_columns((1, 1, 2, 2, 1))
+    st.markdown("---")
+    for_col_6 = st.beta_columns((1, 1, 2, 2, 1))
+    st.markdown("---")
+    for_col_7 = st.beta_columns((1, 1, 2, 2, 1))
+    st.markdown("---")
+    for_col_8 = st.beta_columns((1, 1, 2, 2, 1))
+    st.markdown("---")
+    for_col_9 = st.beta_columns((1, 1, 2, 2, 1))
+
+    with for_col_1[0]:
         st.markdown("**Greeks**")
+    with for_col_2[0]:
         st.markdown("Delta($\Delta$)")
+    with for_col_3[0]:
         st.markdown("Gamma($\Gamma$)")
-    with for_col[1]:
+    with for_col_4[0]:
+        st.markdown(r"Vega($\nu$)")
+    with for_col_5[0]:
+        st.markdown(r"Theta($\Theta$)")
+    with for_col_6[0]:
+        st.markdown(r"Rho($\Rho$)")
+    with for_col_7[0]:
+        st.markdown(r"Vanna")
+    with for_col_8[0]:
+        st.markdown(r"Charm")
+    with for_col_9[0]:
+        st.markdown(r"Vomma")
+
+    with for_col_1[1]:
         st.markdown("**Derivative Form**")
+    with for_col_2[1]:
         st.markdown(r"$\frac{\partial V}{\partial S}$")
+    with for_col_3[1]:
         st.markdown(r"$\frac{\partial^2V}{\partial S^2}$")
-    with for_col[2]:
+    with for_col_4[1]:
+        st.markdown(r"$\frac{\partial V}{\partial \sigma}$")
+    with for_col_5[1]:
+        st.markdown(r"$\frac{\partial V}{\partial t}$")
+    with for_col_6[1]:
+        st.markdown(r"$\frac{\partial V}{\partial r}$")
+    with for_col_7[1]:
+        st.markdown(r"$\frac{\partial^2 V}{\partial S\partial\sigma}$")
+    with for_col_8[1]:
+        st.markdown(r"$\frac{\partial^2 V}{\partial S\partial t}$")
+    with for_col_9[1]:
+        st.markdown(r"$\frac{\partial^2 V}{\partial \sigma^2}$")
+
+    with for_col_1[2]:
         st.markdown("**Call**")
+    with for_col_2[2]:
         st.markdown("$e^{-rt}\Phi(d_1)$")
+    with for_col_3[2]:
         st.markdown(r"$\frac{e^{-rt}\phi(d_1)}{S\sigma\sqrt{t}}$")
-    with for_col[3]:
+    with for_col_4[2]:
+        st.markdown(r"$Se^{-rt}\phi(d_1)\sqrt{t}$")
+    with for_col_5[2]:
+        st.markdown(r"$\frac{-Se^{-rt}\phi(d_1)\sigma}{2\sqrt{t}}-rse^{-rt}\Phi(d_1)-rKe^{-rt}\Phi(d_2)$")
+    with for_col_6[2]:
+        st.markdown(r"$-tSe^{-rt}\Phi(d_1)$")
+    with for_col_7[2]:
+        st.markdown(r"$-e^{-rt}d_2\frac{\phi(d_1)}{\sigma}$")
+    with for_col_8[2]:
+        st.markdown(r"$-e^{-rt}\left[\phi(d_1)\left(-\frac{d_2}{2t}\right)-r\Phi(d_1)\right]$")
+    with for_col_9[2]:
+        st.markdown(r"\nu\left(\frac{d_1d_2}{\sigma}\right)")
+
+    with for_col_1[3]:
         st.markdown("**Put**")
+    with for_col_2[3]:
         st.markdown("$e^{-rt}[\Phi(d_1)-1]$")
+    with for_col_3[3]:
         st.markdown("Same as call")
-    with for_col[4]:
-        st.markdown("Max/Min")
+    with for_col_4[3]:
+        st.markdown("Same as call")
+    with for_col_5[3]:
+        st.markdown(r"$\frac{-Se^{-rt}\phi(d_1)\sigma}{2\sqrt{t}}-rse^{-rt}\Phi(d_1)+rKe^{-rt}\Phi(-d_2)$")
+    with for_col_6[3]:
+        st.markdown(r"$tSe^{-rt}\Phi(-d_1)$")
+    with for_col_7[3]:
+        st.markdown(r"Same as call")
+    with for_col_8[3]:
+        st.markdown(r"$-e^{-rt}\left[\phi(d_1)\left(-\frac{d_2}{2t}\right)+r\Phi(d_1)\right]$")
+    with for_col_9[3]:
+        st.markdown(r"Same as call")
+
+    with for_col_1[4]:
+        st.markdown("Maximized")
+    with for_col_2[4]:
+        st.markdown(r"Deeply ITM")
+    with for_col_3[4]:
+        st.markdown(r"ATM/close to expiration/low volatlity")
+    with for_col_4[4]:
+        st.markdown(r"ATM/long term")
+    with for_col_5[4]:
+        st.markdown(r"ATM/close to expiration/low volatility")
+    with for_col_6[4]:
+        st.markdown(r"Deeply ITM/long term")
+    with for_col_7[4]:
+        st.markdown(r"15-20, 80-85 delta/low volatility")
+    with for_col_8[4]:
+        st.markdown(r"15-20, 80-85 delta/close to expiration")
+    with for_col_9[4]:
+        st.markdown(r"10, 90 delta/long term/low volatility")
 
 
 @st.cache(allow_output_mutation = True)

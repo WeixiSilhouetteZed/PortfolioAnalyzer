@@ -116,7 +116,7 @@ class OptionAnalyzer:
 
     def d_func_t_gen(self, sigma: float, new_s:float) -> None:
         d_1_func = lambda t: (np.log(new_s / self.option.strike) + (self.option.r - self.option.delta + 0.5 * sigma ** 2) * t) / (sigma * np.sqrt(t))
-        d_2_func = lambda t: d_1_func(new_s) - sigma * np.sqrt(t)
+        d_2_func = lambda t: d_1_func(t) - sigma * np.sqrt(t)
         return d_1_func, d_2_func
 
     def bs_premium(self, sigma: float) -> float:
@@ -269,9 +269,9 @@ class OptionAnalyzer:
         return lambda s: self.bs_vega_S_gen(sigma)(s) * d_1_func(s) * d_2_func(s) / sigma
 
     def bs_vomma_t_gen(self, sigma: float, new_s) -> None:
-        d_1_func, _ = self.d_func_t_gen(sigma, new_s)
-        D  = self.option.delta
-        return lambda t: self.mult * t * new_s * np.exp(- D * t) * (d_1_func(t) * d_1_func(t) * stats.norm.pdf(d_1_func(t)) / (sigma * np.sqrt(t)) - d_1_func(t) * stats.norm.pdf(d_1_func(t)))
+        d_1_func, d_2_func = self.d_func_t_gen(sigma, new_s)
+        D = self.option.delta
+        return lambda t: self.bs_vega_t_gen(sigma, new_s)(t) * d_1_func(t) * d_2_func(t) / sigma
 
     def bs_greek_S_plot(self, sigma: float, inter: bool = False) -> None:
         premium_func = self.bs_premium_S_gen(sigma)
