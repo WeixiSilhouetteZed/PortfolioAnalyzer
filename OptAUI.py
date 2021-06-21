@@ -20,7 +20,7 @@ st.markdown("Input call/put/underlying from the sidebar on the left. \
     All positions need to be named uniquely. Select positions to \
         consist portfolios and check the portfolio risk visualizations.")
 
-formula_expander = st.beta_expander("BS Greek Formulae", expanded=True)
+formula_expander = st.beta_expander("BS Greek Formulae", expanded=False)
 
 with formula_expander:
     st.markdown("All formulae are based on BS model for options on futures. The notations are self-explanatory. \
@@ -98,7 +98,7 @@ with formula_expander:
     with for_col_8[2]:
         st.markdown(r"$-e^{-rt}\left[\phi(d_1)\left(-\frac{d_2}{2t}\right)-r\Phi(d_1)\right]$")
     with for_col_9[2]:
-        st.markdown(r"\nu\left(\frac{d_1d_2}{\sigma}\right)")
+        st.markdown(r"$\nu\left(\frac{d_1d_2}{\sigma}\right)$")
 
     with for_col_1[3]:
         st.markdown("**Put**")
@@ -120,7 +120,7 @@ with formula_expander:
         st.markdown(r"Same as call")
 
     with for_col_1[4]:
-        st.markdown("Maximized")
+        st.markdown("**Maximized**")
     with for_col_2[4]:
         st.markdown(r"Deeply ITM")
     with for_col_3[4]:
