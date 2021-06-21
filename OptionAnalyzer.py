@@ -249,24 +249,24 @@ class OptionAnalyzer:
 
     def bs_charm(self, sigma: float) -> float:
         self.update_d(sigma)
-        S, D, T, K, r, d_1, _ = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2 
-        call_charm = D * np.exp(- D * T) * stats.norm.cdf(d_1) - stats.norm.pdf(d_1) * (- np.log(S / K) / (2 * sigma * (T ** (3/2))) + (r - D + 0.5 * sigma ** 2) / (2 * sigma * np.sqrt(T)))
+        S, D, T, K, r, d_1, d_2 = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r, self.d_1, self.d_2 
+        call_charm = (- np.exp(- r * T) * (stats.norm.pdf(d_1) * (- d_2 / (2 * T)) - r * stats.norm.cdf(d_1)))
         put_charm = - D * np.exp(- D * T) + call_charm
         return self.mult * call_charm if self.option.cp == "C" else self.mult * put_charm
 
     def bs_charm_S_gen(self, sigma: float) -> None:
-        d_1_func, _ = self.d_func_S_gen(sigma)
+        d_1_func, d_2_func = self.d_func_S_gen(sigma)
         _, D, T, K, r  = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r
-        call_charm_func = lambda s: self.mult * (D * np.exp(- D * T) * stats.norm.cdf(d_1_func(s)) - stats.norm.pdf(d_1_func(s)) * (- np.log(s / K) / (2 * sigma * (T ** (3/2))) + (r - D + 0.5 * sigma ** 2) / (2 * sigma * np.sqrt(T))))
-        put_charm_func = lambda s: - self.mult * (D * np.exp(- D * T) + call_charm_func(s))
+        call_charm_func = lambda s: self.mult * (- np.exp(- r * T) * (stats.norm.pdf(d_1_func(s)) * (- d_2_func(s) / (2 * T)) - r * stats.norm.cdf(d_1_func(s))))
+        put_charm_func = lambda s: self.mult * (- np.exp(- r * T) * (stats.norm.pdf(d_1_func(s)) * (- d_2_func(s) / (2 * T)) + r * stats.norm.cdf(d_1_func(s))))
         return call_charm_func if self.option.cp == "C" else put_charm_func
 
     def bs_charm_t_gen(self, sigma: float, new_s: float, t_shift: float = 0.0) -> None:
-        d_1_func, _ = self.d_func_t_gen(sigma, new_s)
+        d_1_func, d_2_func = self.d_func_t_gen(sigma, new_s)
         _, D, _, K, r  = self.option.s, self.option.delta, self.option.expiry, self.option.strike, self.option.r
-        call_charm_func = lambda t: self.mult * (D * np.exp(- D * (t - t_shift)) * stats.norm.cdf(d_1_func((t - t_shift))) - stats.norm.pdf(d_1_func((t - t_shift))) * (- np.log(new_s / K) / (2 * sigma * ((t - t_shift) ** (3/2))) + (r - D + 0.5 * sigma ** 2) / (2 * sigma * np.sqrt((t - t_shift))))) \
+        call_charm_func = lambda t: self.mult * (- np.exp(- r * (t - t_shift)) * (stats.norm.pdf(d_1_func((t - t_shift))) * (- d_2_func((t - t_shift)) / (2 * (t - t_shift))) - r * stats.norm.cdf(d_1_func((t - t_shift))))) \
             if t - t_shift > 0 else 0
-        put_charm_func = lambda t: - self.mult * (D * np.exp(- D * (t - t_shift)) + call_charm_func(t)) \
+        put_charm_func = lambda t: self.mult * (- np.exp(- r * (t - t_shift)) * (stats.norm.pdf(d_1_func((t - t_shift))) * (- d_2_func((t - t_shift)) / (2 * (t - t_shift))) + r * stats.norm.cdf(d_1_func((t - t_shift))))) \
             if t - t_shift > 0 else 0
         return call_charm_func if self.option.cp == "C" else put_charm_func
 
