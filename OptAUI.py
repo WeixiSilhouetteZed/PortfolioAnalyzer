@@ -20,7 +20,7 @@ st.markdown("Input call/put/underlying from the sidebar on the left. \
     All positions need to be named uniquely. Select positions to \
         consist portfolios and check the portfolio risk visualizations.")
 
-formula_expander = st.beta_expander("BS Greek Formulae", expanded=False)
+formula_expander = st.expander("BS Greek Formulae", expanded=False)
 
 with formula_expander:
     st.markdown("All formulae are based on BS model for options on futures. The notations are self-explanatory. \
