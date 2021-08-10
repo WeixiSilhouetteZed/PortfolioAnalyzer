@@ -25,23 +25,23 @@ formula_expander = st.expander("BS Greek Formulae", expanded=False)
 with formula_expander:
     st.markdown("All formulae are based on BS model for options on futures. The notations are self-explanatory. \
         The source is *Option Volatility and Pricing* by Sheldon Natenberg.")
-    for_col_1 = st.beta_columns((1, 1, 2, 2, 1))
+    for_col_1 = st.columns((1, 1, 2, 2, 1))
     st.markdown("---")
-    for_col_2 = st.beta_columns((1, 1, 2, 2, 1))
+    for_col_2 = st.columns((1, 1, 2, 2, 1))
     st.markdown("---")
-    for_col_3 = st.beta_columns((1, 1, 2, 2, 1))
+    for_col_3 = st.columns((1, 1, 2, 2, 1))
     st.markdown("---")
-    for_col_4 = st.beta_columns((1, 1, 2, 2, 1))
+    for_col_4 = st.columns((1, 1, 2, 2, 1))
     st.markdown("---")
-    for_col_5 = st.beta_columns((1, 1, 2, 2, 1))
+    for_col_5 = st.columns((1, 1, 2, 2, 1))
     st.markdown("---")
-    for_col_6 = st.beta_columns((1, 1, 2, 2, 1))
+    for_col_6 = st.columns((1, 1, 2, 2, 1))
     st.markdown("---")
-    for_col_7 = st.beta_columns((1, 1, 2, 2, 1))
+    for_col_7 = st.columns((1, 1, 2, 2, 1))
     st.markdown("---")
-    for_col_8 = st.beta_columns((1, 1, 2, 2, 1))
+    for_col_8 = st.columns((1, 1, 2, 2, 1))
     st.markdown("---")
-    for_col_9 = st.beta_columns((1, 1, 2, 2, 1))
+    for_col_9 = st.columns((1, 1, 2, 2, 1))
 
     with for_col_1[0]:
         st.markdown("**Greeks**")
@@ -206,9 +206,9 @@ if note_pad is not None:
 
 
 
-table_col, _ = st.beta_columns((5,1))
+table_col, _ = st.columns((5,1))
 
-graph_vs_s_col, graph_vs_t_col = st.beta_columns(2)
+graph_vs_s_col, graph_vs_t_col = st.columns(2)
 
 if portfolio_selection:
     port.pos = [pos_dict[name] for name in portfolio_selection]
