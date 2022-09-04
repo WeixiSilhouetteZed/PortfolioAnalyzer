@@ -4,7 +4,6 @@ import scipy.stats as stats
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit as st
-from traitlets.traitlets import Instance 
 
 ANNUAL = 256
 class option:
