@@ -2,7 +2,7 @@ import OptionAnalyzer as OA
 import streamlit as st 
 from PIL import Image
 
-from streamlit import caching
+from streamlit.runtime.legacy_caching import clear_cache
 
 img = Image.open("greek-helmet.png")
 
@@ -225,7 +225,7 @@ if portfolio_selection:
     st.success('Done!')
 
 if cache_button:
-    caching.clear_cache()
+    clear_cache()
 
 
 
